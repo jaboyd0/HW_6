@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <title>Weather City</title>
+
+  <link
+      rel="stylesheet"
+      href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+    />
+
+  <style type="text/css">
+    button,
+    div,
+    form,
+    input {
+      margin: 10px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <nav class="navbar navbar-light bg-light">
+    <span class="navbar-brand mb-0 h1">Weather Search</span>
+  </nav>
+
+  <div class="container">
+      
+    <!-- <h1>Weather Search</h1> -->
+
+
+    <div class="card">
+      <h5 class="card-header">Search Cities</h5>
+      <div class="card-body">
+        <h5 class="card-title">Previously Viewed</h5>
+        <div id="buttons-view">
+        
+        </div>
+        <br>
+
+        <form id="weather-form">
+      <label for="weather-input">Search</label>
+      <input type="text" id="city-input">
+      <br>
+
+        <button id="add-city"  class="btn btn-primary">Search a City</button>
+        </form>
+      </div>
+    </div>
+
+    
+   
+    <!-- Movies will Get Dumped Here -->
+    <div id="weather-view"></div>
+
+
+
+
+
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script type="text/javascript">
+      // Initial array of movies
+      var prevCities = ["Washington", "Paris", "London"];
+      // var city = $("#city-input").val().trim()
+      var searchorButton = true
+
+      var today = new Date();
+      var dd = String(today.getDate()).padStart(2, '0');
+      var mm = String(today.getMonth() + 1).padStart(2, '0'); 
+      var yyyy = today.getFullYear();
+
+      today = mm + '/' + dd + '/' + yyyy;
+
+      function displayWeatherInfo() {
+
+        // if (searchorButton == true) {
+        //   var city = $(this).attr("data-name");
+        // } else{
+        //   var city = $("#city-input").val().trim()
+        // }
+        
+        // var city = $(this).attr("data-name");
+        var city = $("#city-input").val().trim()
+        var queryURL = "https://api.openweathermap.org/data/2.5/weather?q=" + city + "&appid=4a7c47263265f547b1dac0d6953880af";
+
+
+        $.ajax({
+          url: queryURL,
+          method: "GET"
+        }).then(function(response) {
+
+            console.log(response)
+
+            $("#weather-view").empty();
+
+          // Creating a div to hold the movie
+          var weatherDiv = $("<div class='weather'>");
+
+          // Storing the rating data
+          var newCity = response.name;
+
+          // Creating an element to have the rating displayed
+          var pOne = $("<p>").text(newCity + " (" + today + ") " );
+
+          // Displaying the rating
+          weatherDiv.append(pOne);
+
+          var windSpeed = response.wind.speed;
+          var pTwo = $("<p>").text("Wind Speed: " + windSpeed);
+          weatherDiv.append(pTwo);
+
+          var humidity = response.main.humidity;
+          var pThree = $("<p>").text("Humidity: " + humidity);
+          weatherDiv.append(pThree);
+
+          var tempF = (response.main.temp - 273.15) * 1.80 + 32;
+          var pFour = $("<p>").text("Temperature(F): " + tempF.toFixed(2));
+          weatherDiv.append(pFour);
+
+          // var uvIndex = response.main.humidity;
+          // var pFive = $("<p>").text("Humidity: " + humidity);
+          // weatherDiv.append(pFive);
+
+
+          var lat = response.coord.lat;
+          var long = response.coord.lon;
+          
+          var queryURL = "http://api.openweathermap.org/data/2.5/uvi/forecast?appid=4a7c47263265f547b1dac0d6953880af&lat=" + lat + "&lon="+ long
+
+          $.ajax({
+          url: queryURL,
+          method: "GET"
+        }).then(function(response) {
+
+            console.log(response)
+
+            var uvIndex = response[0].value
+            
+          var pFive = $("<p>").text("UV Index: " + uvIndex);
+          weatherDiv.append(pFive);
+        })
+          // Retrieving the URL for the image
+        //   var imgURL = response.Poster;
+
+        //   // Creating an element to hold the image
+        //   var image = $("<img>").attr("src", imgURL);
+
+        //   // Appending the image
+        //   movieDiv.append(image);
+
+          // Putting the entire movie above the previous movies
+          $("#weather-view").prepend(weatherDiv);
+        });
+
+      }
+
+      // Function for displaying movie data
+      function renderButtons() {
+
+        // Deleting the movies prior to adding new movies
+        // (this is necessary otherwise you will have repeat buttons)
+        $("#buttons-view").empty();
+
+        // Looping through the array of movies
+        for (var i = 0; i < prevCities.length; i++) {
+
+          // Then dynamicaly generating buttons for each movie in the array
+          // This code $("<button>") is all jQuery needs to create the beginning and end tag. (<button></button>)
+          var a = $("<button>");
+          // Adding a class of movie-btn to our button
+          a.addClass("city-btn");
+          // Adding a data-attribute
+          a.attr("data-name", prevCities[i]);
+          // Providing the initial button text
+          a.text(prevCities[i]);
+          // Adding the button to the buttons-view div
+          $("#buttons-view").append(a);
+        }
+      }
+
+      // This function handles events where a movie button is clicked
+      $("#add-city").on("click", function(event) {
+        event.preventDefault();
+        searchorButton = false
+        // This line grabs the input from the textbox
+        var cityInput = $("#city-input").val().trim();
+
+        // Adding movie from the textbox to our array
+        prevCities.push(cityInput);
+
+        // Calling renderButtons which handles the processing of our movie array
+        renderButtons();
+        // var city = $(this).attr("data-name");
+        displayWeatherInfo();
+      });
+
+      // Adding a click event listener to all elements with a class of "movie-btn"
+      $(document).on("click", ".city-btn", function(){
+        searchorButton = true
+        // var city = $(this).attr("data-name");
+        displayWeatherInfo()
+      }
+      );
+
+     
+
+      // Calling the renderButtons function to display the initial buttons
+      renderButtons();
+    </script>
+  </div>
+</body>
+
+</html>
